@@ -18,7 +18,7 @@ if not TOKEN or not GEMINI_API_KEY:
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Новая актуальная модель
-model = genai.GenerativeModel('gemini-2.5-flash')   # ← изменили здесь
+model = genai.GenerativeModel('gemini-3.1-flash-lite')
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
