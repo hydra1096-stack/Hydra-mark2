@@ -16,7 +16,9 @@ if not TOKEN or not GEMINI_API_KEY:
     raise ValueError("TOKEN или GEMINI_API_KEY не найден!")
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash-lite')
+
+# Более стабильная модель на май 2026
+model = genai.GenerativeModel('gemini-3.1-flash')
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -25,11 +27,11 @@ user_modes = {}
 
 HUMOR_PROMPT = """Ты — дерзкий токсичный русскоязычный мемный приколист 2026 года. 
 Отвечай с матом, стёбом, сарказмом и жёстким юмором. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без *, без списков."""
+Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown."""
 
 WIKI_PROMPT = """Ты — умный и точный помощник. 
 Отвечай подробно и по делу. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без *, без списков."""
+Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown."""
 
 def get_mode_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -39,10 +41,7 @@ def get_mode_keyboard():
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer(
-        "👋 Привет! Я готов работать.\n"
-        "Используй /pitstop чтобы сменить режим."
-    )
+    await message.answer("👋 Привет! Используй /pitstop чтобы выбрать режим.")
 
 @dp.message(Command("pitstop"))
 async def pitstop(message: types.Message):
@@ -52,17 +51,16 @@ async def pitstop(message: types.Message):
 async def set_mode(callback: types.CallbackQuery):
     mode = "humor" if callback.data == "mode_humor" else "wiki"
     user_modes[callback.from_user.id] = mode
-    
-    mode_name = "😂 Юморист-Приколист" if mode == "humor" else "📚 Умный Помощник"
-    await callback.message.edit_text(f"✅ Режим изменён на:\n<b>{mode_name}</b>", parse_mode="HTML")
-    await callback.answer("Режим обновлён!")
+    mode_name = "😂 Приколист" if mode == "humor" else "📚 Умный"
+    await callback.message.edit_text(f"✅ Режим: <b>{mode_name}</b>", parse_mode="HTML")
+    await callback.answer()
 
 @dp.message(F.text)
 async def chat(message: types.Message):
     user_id = message.from_user.id
     
     if user_id not in user_modes:
-        await message.answer("Сначала выбери режим с помощью /pitstop", reply_markup=get_mode_keyboard())
+        await message.answer("Сначала выбери режим: /pitstop", reply_markup=get_mode_keyboard())
         return
 
     await message.answer("⏳ Думаю...")
@@ -77,11 +75,11 @@ async def chat(message: types.Message):
         await message.answer(answer)
         
     except Exception as e:
-        logging.error(f"Ошибка: {e}")
-        await message.answer("❌ Ошибка при запросе к ИИ. Попробуй ещё раз.")
+        logging.error(f"Ошибка Gemini: {e}")
+        await message.answer("❌ Ошибка ИИ. Попробуй ещё раз или /pitstop")
 
 async def main():
-    print("✅ Бот запущен с командой /pitstop")
+    print("✅ Бот запущен (gemini-2.5-flash)")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
