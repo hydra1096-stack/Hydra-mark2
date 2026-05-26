@@ -7,19 +7,18 @@ from aiogram import F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import google.generativeai as genai
 
-# Включаем логирование
 logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if not TOKEN:
-    raise ValueError("TOKEN не найден!")
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY не найден!")
+if not TOKEN or not GEMINI_API_KEY:
+    raise ValueError("TOKEN или GEMINI_API_KEY не найден!")
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+
+# Новая актуальная модель
+model = genai.GenerativeModel('gemini-2.5-flash')   # ← изменили здесь
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -27,8 +26,8 @@ dp = Dispatcher()
 user_modes = {}
 user_history = {}
 
-HUMOR_PROMPT = """Ты — дерзкий, токсичный и очень смешной русскоязычный приколист 2026 года. Отвечай с матом, стёбом, сленгом и жёстким юмором."""
-WIKI_PROMPT = """Ты — высокоинтеллектуальный помощник. Отвечай точно, структурировано и подробно."""
+HUMOR_PROMPT = """Ты — дерзкий токсичный русскоязычный мемный приколист 2026 года. Отвечай с матом, стёбом, сарказмом и жёстким юмором."""
+WIKI_PROMPT = """Ты — умный и точный помощник. Отвечай подробно, структурировано и по делу."""
 
 def get_mode_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -39,16 +38,15 @@ def get_mode_keyboard():
 @dp.message(Command("start"))
 async def start(message: types.Message):
     if message.from_user.id not in user_modes:
-        await message.answer("👋 Привет! Выбери режим:", reply_markup=get_mode_keyboard())
+        await message.answer("👋 Привет! Выбери режим работы бота:", reply_markup=get_mode_keyboard())
     else:
-        await message.answer("Бот уже готов. Пиши что угодно.")
+        await message.answer("✅ Бот готов. Просто пиши сообщения.")
 
 @dp.callback_query(lambda c: c.data.startswith("mode_"))
 async def set_mode(callback: types.CallbackQuery):
     mode = "humor" if callback.data == "mode_humor" else "wiki"
     user_modes[callback.from_user.id] = mode
-    user_history[callback.from_user.id] = []
-    await callback.message.edit_text(f"✅ Режим установлен!")
+    await callback.message.edit_text("✅ Режим успешно установлен!")
     await callback.answer()
 
 @dp.message(F.text)
@@ -63,22 +61,19 @@ async def chat(message: types.Message):
 
     try:
         system_prompt = HUMOR_PROMPT if user_modes[user_id] == "humor" else WIKI_PROMPT
-        
-        # Правильный способ работы с Gemini
-        full_prompt = f"{system_prompt}\n\nПользователь: {message.text}"
+        full_prompt = f"{system_prompt}\n\nВопрос: {message.text}"
         
         response = model.generate_content(full_prompt)
         answer = response.text
         
         await message.answer(answer)
-        logging.info(f"Ответ Gemini получен для пользователя {user_id}")
         
     except Exception as e:
-        logging.error(f"Ошибка Gemini: {e}", exc_info=True)
-        await message.answer("❌ Ошибка при обращении к ИИ.\nПопробуй ещё раз или напиши /start")
+        logging.error(f"Ошибка Gemini: {str(e)}")
+        await message.answer("❌ Ошибка соединения с ИИ. Попробуй ещё раз.")
 
 async def main():
-    print("✅ Бот с Gemini успешно запущен!")
+    print("✅ Бот с Gemini-2.5-flash запущен!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
