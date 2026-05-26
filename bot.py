@@ -17,8 +17,8 @@ if not TOKEN or not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Более стабильная модель на май 2026
-model = genai.GenerativeModel('gemini-3.1-flash')
+# Gemini 3.1
+model = genai.GenerativeModel('gemini-3.1-flash')   # ← Основная модель
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -27,11 +27,11 @@ user_modes = {}
 
 HUMOR_PROMPT = """Ты — дерзкий токсичный русскоязычный мемный приколист 2026 года. 
 Отвечай с матом, стёбом, сарказмом и жёстким юмором. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown."""
+Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без списков."""
 
 WIKI_PROMPT = """Ты — умный и точный помощник. 
-Отвечай подробно и по делу. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown."""
+Отвечай подробно, структурировано и по делу. 
+Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без списков."""
 
 def get_mode_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -75,11 +75,11 @@ async def chat(message: types.Message):
         await message.answer(answer)
         
     except Exception as e:
-        logging.error(f"Ошибка Gemini: {e}")
-        await message.answer("❌ Ошибка ИИ. Попробуй ещё раз или /pitstop")
+        logging.error(f"Ошибка Gemini 3.1: {e}")
+        await message.answer("❌ Ошибка ИИ. Попробуй ещё раз.")
 
 async def main():
-    print("✅ Бот запущен (gemini-2.5-flash)")
+    print("✅ Бот запущен на Gemini 3.1-flash")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
