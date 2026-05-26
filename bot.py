@@ -25,11 +25,11 @@ user_modes = {}
 
 HUMOR_PROMPT = """Ты — дерзкий токсичный русскоязычный мемный приколист 2026 года. 
 Отвечай с матом, стёбом, сарказмом и жёстким юмором. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без *, без списков, без заголовков."""
+Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без *, без списков."""
 
 WIKI_PROMPT = """Ты — умный и точный помощник. 
 Отвечай подробно и по делу. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без *, без нумерованных и маркированных списков."""
+Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown, без **, без *, без списков."""
 
 def get_mode_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -39,24 +39,30 @@ def get_mode_keyboard():
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    if message.from_user.id not in user_modes:
-        await message.answer("👋 Привет! Выбери режим:", reply_markup=get_mode_keyboard())
-    else:
-        await message.answer("✅ Бот готов. Пиши.")
+    await message.answer(
+        "👋 Привет! Я готов работать.\n"
+        "Используй /pitstop чтобы сменить режим."
+    )
+
+@dp.message(Command("pitstop"))
+async def pitstop(message: types.Message):
+    await message.answer("🔄 Выбери режим:", reply_markup=get_mode_keyboard())
 
 @dp.callback_query(lambda c: c.data.startswith("mode_"))
 async def set_mode(callback: types.CallbackQuery):
     mode = "humor" if callback.data == "mode_humor" else "wiki"
     user_modes[callback.from_user.id] = mode
-    await callback.message.edit_text("✅ Режим установлен!")
-    await callback.answer()
+    
+    mode_name = "😂 Юморист-Приколист" if mode == "humor" else "📚 Умный Помощник"
+    await callback.message.edit_text(f"✅ Режим изменён на:\n<b>{mode_name}</b>", parse_mode="HTML")
+    await callback.answer("Режим обновлён!")
 
 @dp.message(F.text)
 async def chat(message: types.Message):
     user_id = message.from_user.id
     
     if user_id not in user_modes:
-        await message.answer("Сначала выбери режим:", reply_markup=get_mode_keyboard())
+        await message.answer("Сначала выбери режим с помощью /pitstop", reply_markup=get_mode_keyboard())
         return
 
     await message.answer("⏳ Думаю...")
@@ -72,10 +78,10 @@ async def chat(message: types.Message):
         
     except Exception as e:
         logging.error(f"Ошибка: {e}")
-        await message.answer("❌ Ошибка при запросе. Попробуй ещё раз.")
+        await message.answer("❌ Ошибка при запросе к ИИ. Попробуй ещё раз.")
 
 async def main():
-    print("✅ Бот запущен (без Markdown)")
+    print("✅ Бот запущен с командой /pitstop")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
