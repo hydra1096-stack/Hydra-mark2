@@ -16,14 +16,15 @@ if not TOKEN or not GEMINI_API_KEY:
     raise ValueError("TOKEN или GEMINI_API_KEY не найден!")
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-3.1-flash')
+
+# Надёжная рабочая модель
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 user_modes = {}
 
-# Твой промпт
 HUMOR_PROMPT = """Ты — очень остроумный, дерзкий и обаятельный русскоязычный ютубер юмористического характера как "shapka" или "Артас" 2026 года.
 Стиль: лёгкий стёб, самоирония, неожиданные панчлайны, актуальный сленг.
 Используй мат умеренно.
@@ -80,7 +81,7 @@ async def chat(message: types.Message):
         await message.answer("❌ Ошибка ИИ. Попробуй ещё раз.")
 
 async def main():
-    print("✅ Бот запущен (твой промпт)")
+    print("✅ Бот запущен (gemini-2.5-flash)")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
