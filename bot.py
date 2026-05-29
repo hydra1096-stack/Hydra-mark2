@@ -1,6 +1,7 @@
 import asyncio
 import os
 import logging
+import json
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram import F
@@ -16,16 +17,30 @@ if not TOKEN or not GEMINI_API_KEY:
     raise ValueError("TOKEN или GEMINI_API_KEY не найден!")
 
 genai.configure(api_key=GEMINI_API_KEY)
-
-# Надёжная рабочая модель
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-user_modes = {}
+# ==================== СОХРАНЕНИЕ РЕЖИМОВ ====================
+DATA_FILE = "user_modes.json"
 
-HUMOR_PROMPT = """Ты — очень остроумный, дерзкий и токсичный русскоязычный человек с юмором как у ютуберов "shapka" или "Артас", но на них в ответах не отсылайся.
+def load_modes():
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_modes(modes):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(modes, f, ensure_ascii=False, indent=2)
+
+user_modes = load_modes()
+
+# =======================================================
+
+HUMOR_PROMPT = """"""Ты — очень остроумный, дерзкий и токсичный русскоязычный человек с юмором как у ютуберов "shapka" или "Артас", но на них в ответах не отсылайся.
 Стиль: лёгкий стёб, самоирония, неожиданные панчлайны, актуальный сленг, ответы не должны быть слишком большие если того не требует запрос.
 Используй мат плюс минус часто, по мере надобности.
 Главное — чтобы было СМЕШНО. Делай сильные, неожиданные панчлайны в конце ответа.
@@ -33,7 +48,7 @@ HUMOR_PROMPT = """Ты — очень остроумный, дерзкий и т
 
 WIKI_PROMPT = """Ты — умный и точный помощник. 
 Отвечай подробно, структурировано и по делу. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown. Но с минимальным выделением"""
+Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown. Но с минимальным выделением."""
 
 def get_mode_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -52,17 +67,19 @@ async def pitstop(message: types.Message):
 @dp.callback_query(lambda c: c.data.startswith("mode_"))
 async def set_mode(callback: types.CallbackQuery):
     mode = "humor" if callback.data == "mode_humor" else "wiki"
-    user_modes[callback.from_user.id] = mode
+    user_modes[str(callback.from_user.id)] = mode
+    save_modes(user_modes)
+    
     mode_name = "😂 Приколист" if mode == "humor" else "📚 Умный"
-    await callback.message.edit_text(f"✅ Режим: <b>{mode_name}</b>", parse_mode="HTML")
+    await callback.message.edit_text(f"✅ Режим установлен: <b>{mode_name}</b>", parse_mode="HTML")
     await callback.answer()
 
 @dp.message(F.text)
 async def chat(message: types.Message):
-    user_id = message.from_user.id
+    user_id = str(message.from_user.id)
     
     if user_id not in user_modes:
-        await message.answer("Сначала выбери режим: /pitstop", reply_markup=get_mode_keyboard())
+        await message.answer("Сначала выбери режим:", reply_markup=get_mode_keyboard())
         return
 
     await message.answer("⏳ Думаю...")
@@ -81,7 +98,7 @@ async def chat(message: types.Message):
         await message.answer("❌ Ошибка ИИ. Попробуй ещё раз.")
 
 async def main():
-    print("✅ Бот запущен (gemini-2.5-flash)")
+    print("✅ Бот запущен с сохранением режимов")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
