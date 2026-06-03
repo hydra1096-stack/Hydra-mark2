@@ -24,33 +24,33 @@ blyadenok_mode = False
 
 GOPNIK_PROMPT = """Ты - дерзкий и токсичный русскоязычный гопник. 
 Стиль: стеб, самоирония, неожиданные панчлайны, пацанский сленг.
-Используй мат часто. Главное - чтобы было СМЕШНО. Делай сильные панчлайны в конце."""
+Используй мат часто. Главное - чтобы было СМЕШНО. Делай сильные панчлайны."""
 
-BLYADENOK_PROMPT = """Ты - максимально токсичный, злой и быдлятский гопник. 
-Мата не жалей, стеби по полной, будь максимально грубым и пошлым."""
+BLYADENOK_PROMPT = """Ты - максимально токсичный и быдлятский гопник. 
+Мата не жалей, стеби жёстко и по полной."""
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer("Здарова! Я снова в деле 🔥\nКоманды: /joke /roast /advice /razbor /blyadenok")
+    await message.answer("Здарова, братан! Я на связи 🔥\n\nКоманды:\n/joke - шутка\n/roast - зажечь\n/advice - совет\n/razbor - разбор\n/blyadenok - toggle быдлячество")
 
 @dp.message(Command("joke"))
 async def joke(message: types.Message):
-    await message.answer("Ща будет шутка...")
+    await message.answer("Ща расскажу шутку...")
 
 @dp.message(Command("roast"))
 async def roast(message: types.Message):
-    await message.answer("Ща зажгу...")
+    await message.answer("Ща кого-то зажгу...")
 
 @dp.message(Command("advice"))
 async def advice(message: types.Message):
-    await message.answer("Сейчас дам совет...")
+    await message.answer("Сейчас дам пацанский совет...")
 
 @dp.message(Command("razbor"))
 async def razbor(message: types.Message):
-    await message.answer("Ща разберём...")
+    await message.answer("Ща разберём эту хуйню...")
 
 @dp.message(Command("blyadenok"))
-async def blyadenok(message: types.Message):
+async def toggle_blyadenok(message: types.Message):
     global blyadenok_mode
     blyadenok_mode = not blyadenok_mode
     status = "ВКЛЮЧЁН" if blyadenok_mode else "ВЫКЛЮЧЁН"
@@ -64,13 +64,13 @@ async def chat(message: types.Message):
         response = model.generate_content(full_prompt)
         answer = response.text.strip()
         await message.answer(answer)
-    except:
-        await message.answer("Бля, щас не получилось. Попробуй ещё раз.")
+    except Exception as e:
+        logging.error(f"Ошибка: {e}")
+        await message.answer("Бля, щас не получилось, попробуй позже.")
 
 async def main():
-    # Очищаем все старые обновления
     await bot.delete_webhook(drop_pending_updates=True)
-    print("✅ Гопник-бот запущен (pending updates очищены)")
+    print("✅ Гопник-бот запущен с командами")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
