@@ -31,7 +31,7 @@ BLYADENOK_PROMPT = """Ты - максимально токсичный и быд
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer("Здарова, братан! Я на связи 🔥\n\nКоманды:\n/joke - шутка\n/roast - зажечь\n/advice - совет\n/razbor - разбор\n/blyadenok - toggle быдлячество")
+    await message.answer("Здарова, братан! Урал на связи🤣🤘 Вот че я могу исполнять:/joke - Расскажу шутейку; /roast - Прожарка кого-нибудь🔥; /advice - Дам совет; /razbor - Дам свое мнение насчёт чего-нибудь; /blyadenok - буду под водярой😂😂")
 
 @dp.message(Command("joke"))
 async def joke(message: types.Message):
@@ -39,7 +39,7 @@ async def joke(message: types.Message):
 
 @dp.message(Command("roast"))
 async def roast(message: types.Message):
-    await message.answer("Ща кого-то зажгу...")
+    await message.answer("Ща кого-то прожгу...")
 
 @dp.message(Command("advice"))
 async def advice(message: types.Message):
