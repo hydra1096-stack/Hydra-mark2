@@ -54,7 +54,7 @@ async def advice(message: types.Message):
 async def razbor(message: types.Message):
     await message.answer("Ща разберём эту хуйню...")
 
-@dp.message(Command("blyadenok""))
+@dp.message(Command("blyadenok"))
 async def blyadenok(message: types.Message):
     global blyadenok_mode
     blyadenok_mode = not blyadenok_mode
