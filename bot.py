@@ -33,7 +33,12 @@ BLYADENOK_PROMPT = """Ты - максимально токсичный, злой
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer("Здарова, братан! Пиши чё надо. Команды: /joke /roast /advice /razbor /blyadenok")
+    await message.answer("Здарова, братан! Пиши чё надо. Команды: 
+/joke 
+/roast 
+/advice 
+/razbor 
+/blyadenok")
 
 @dp.message(Command("joke"))
 async def joke(message: types.Message):
@@ -54,7 +59,7 @@ async def advice(message: types.Message):
 async def razbor(message: types.Message):
     await message.answer("Ща разберём эту хуйню...")
 
-@dp.message(Command("блядёнок"))
+@dp.message(Command("blyadenok""))
 async def blyadenok(message: types.Message):
     global blyadenok_mode
     blyadenok_mode = not blyadenok_mode
