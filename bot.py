@@ -5,7 +5,6 @@ import json
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram import F
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import google.generativeai as genai
 
 logging.basicConfig(level=logging.INFO)
@@ -22,84 +21,70 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# ==================== СОХРАНЕНИЕ РЕЖИМОВ ====================
-DATA_FILE = "user_modes.json"
+# Режим быдлячества
+blyadenok_mode = False
 
-def load_modes():
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return {}
+GOPNIK_PROMPT = """Ты - дерзкий и токсичный русскоязычный гопник. 
+Стиль: стеб, самоирония, неожиданные панчлайны, пацанский сленг.
+Используй мат часто. Главное - чтобы было СМЕШНО. Делай сильные панчлайны в конце."""
 
-def save_modes(modes):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(modes, f, ensure_ascii=False, indent=2)
-
-user_modes = load_modes()
-
-# =======================================================
-
-HUMOR_PROMPT = """Ты - дерзкий и токсичный русскоязычный гопник
-Стиль: стеб, самоирония, неожиданные панчлайны, "пацанский" сленг.
-Используй мат, возможно часто.
-Главное - чтобы было СМЕШНО. Делай сильные неожиданные панчлайны в конце ответа.
-Будь живым (то есть пиши сообщения как пользователь, не большие, если того не подразумевает запрос пользователя), ироничным и токсичным, но с шармом."""
-
-WIKI_PROMPT = """Ты - умный и точный помощник. 
-Отвечай подробно, структурировано и по делу. 
-Отвечай ТОЛЬКО обычным текстом, БЕЗ Markdown.
-Только базовая пунктуация"""
-
-def get_mode_keyboard():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="😂 Юморист-Приколист", callback_data="mode_humor")],
-        [InlineKeyboardButton(text="📚 Умный Помощник", callback_data="mode_wiki")]
-    ])
+BLYADENOK_PROMPT = """Ты - максимально токсичный, злой и быдлятский гопник. 
+Мата не жалей, стеби по полной, будь максимально грубым и пошлым. Никаких тормозов."""
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer("👋 Привет! Используй /pitstop чтобы выбрать режим.")
+    await message.answer("Здарова, братан! Пиши чё надо. Команды: /joke /roast /advice /razbor /blyadenok")
 
-@dp.message(Command("pitstop"))
-async def pitstop(message: types.Message):
-    await message.answer("🔄 Выбери режим:", reply_markup=get_mode_keyboard())
+@dp.message(Command("joke"))
+async def joke(message: types.Message):
+    await message.answer("Ща расскажу...")
 
-@dp.callback_query(lambda c: c.data.startswith("mode_"))
-async def set_mode(callback: types.CallbackQuery):
-    mode = "humor" if callback.data == "mode_humor" else "wiki"
-    user_modes[str(callback.from_user.id)] = mode
-    save_modes(user_modes)
-    
-    mode_name = "😂 Приколист" if mode == "humor" else "📚 Умный"
-    await callback.message.edit_text(f"✅ Режим установлен: <b>{mode_name}</b>", parse_mode="HTML")
-    await callback.answer()
+@dp.message(Command("roast"))
+async def roast(message: types.Message):
+    text = message.text.replace("/roast", "").strip()
+    if not text:
+        text = "этот чел"
+    await message.answer("Ща зажгу...")
+
+@dp.message(Command("advice"))
+async def advice(message: types.Message):
+    await message.answer("Сейчас дам совет...")
+
+@dp.message(Command("razbor"))
+async def razbor(message: types.Message):
+    await message.answer("Ща разберём эту хуйню...")
+
+@dp.message(Command("блядёнок"))
+async def blyadenok(message: types.Message):
+    global blyadenok_mode
+    blyadenok_mode = not blyadenok_mode
+    status = "ВКЛЮЧЁН" if blyadenok_mode else "ВЫКЛЮЧЕН"
+    await message.answer(f"Режим 'БЛЯДЁНОК' {status} 🔥")
 
 @dp.message(F.text)
 async def chat(message: types.Message):
-    user_id = str(message.from_user.id)
+    prompt = BLYADENOK_PROMPT if blyadenok_mode else GOPNIK_PROMPT
     
-    if user_id not in user_modes:
-        await message.answer("Сначала выбери режим:", reply_markup=get_mode_keyboard())
-        return
-
-    await message.answer("⏳ Думаю...")
-
     try:
-        system_prompt = HUMOR_PROMPT if user_modes[user_id] == "humor" else WIKI_PROMPT
-        full_prompt = f"{system_prompt}\n\nВопрос: {message.text}"
-        
+        full_prompt = f"{prompt}\n\nПользователь: {message.text}"
         response = model.generate_content(full_prompt)
         answer = response.text.strip()
-        
         await message.answer(answer)
-        
-    except Exception as e:
-        logging.error(f"Ошибка: {e}")
-        await message.answer("❌ Ошибка ИИ. Попробуй ещё раз.")
+    except:
+        await message.answer("Бля, щас не получилось, попробуй ещё раз.")
+
+# Обработка голосовых сообщений
+@dp.message(F.voice)
+async def voice_handler(message: types.Message):
+    await message.answer("Голосуху принял, ща послушаю...")
+
+# Обработка фото
+@dp.message(F.photo)
+async def photo_handler(message: types.Message):
+    await message.answer("Фото принял. Чё там за хуйня?")
 
 async def main():
-    print("✅ Бот запущен (очищенный промпт)")
+    print("✅ Гопник-бот запущен")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
